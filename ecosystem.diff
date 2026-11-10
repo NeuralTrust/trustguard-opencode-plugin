@@ -1,0 +1,10 @@
+--- a/services/site/src/docs/v1/content/ecosystem.mdx
++++ b/services/site/src/docs/v1/content/ecosystem.mdx
+@@ -48,6 +48,7 @@
+ | [opencode-goal-plugin](https://github.com/willytop8/OpenCode-goal-plugin)                          | Session-scoped `/goal` workflow that keeps objectives in context and auto-continues until complete                               |
+ | [opencode-tavily](https://github.com/tavily-ai/opencode-tavily)                                    | Web search, extraction, crawling, and deep research via the Tavily CLI                                                           |
+ | [opencode-supabase](https://github.com/supabase-community/opencode-supabase)                       | Supabase plugin for OpenCode: account login, Management API tools, bundled Supabase agent skills, and guided Supabase MCP setup. |
++| [@neuraltrust/opencode-trustguard](https://github.com/NeuralTrust/trustguard-opencode-plugin)      | Screen prompts, tool calls and tool output with NeuralTrust TrustGuard; block risky commands before they run                     |
+ 
+ ---
+ 

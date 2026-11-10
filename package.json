@@ -1,0 +1,66 @@
+{
+  "name": "@neuraltrust/opencode-trustguard",
+  "version": "0.1.0",
+  "description": "NeuralTrust TrustGuard plugin for OpenCode: evaluates prompts, tool calls and tool results with POST /v1/evaluate and blocks risky actions before they run.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "NeuralTrust",
+  "homepage": "https://docs.neuraltrust.ai/integrations/overview",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeuralTrust/trustguard-opencode-plugin.git"
+  },
+  "bugs": "https://github.com/NeuralTrust/trustguard-opencode-plugin/issues",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "neuraltrust",
+    "trustguard",
+    "guardrails",
+    "ai-firewall",
+    "llm-security",
+    "prompt-injection",
+    "dlp"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "rm -rf .test-dist && tsc -p tsconfig.test.json && node --test .test-dist/test/",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.18.29",
+    "@opencode/plugin": ">=2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opencode-ai/plugin": {
+      "optional": true
+    },
+    "@opencode/plugin": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "1.19.5",
+    "@opencode/plugin": "2.2.7",
+    "@types/node": "^20.19.0",
+    "typescript": "^5.6.0"
+  }
+}
