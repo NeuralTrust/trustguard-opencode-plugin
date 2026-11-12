@@ -1,0 +1,54 @@
+# Publishes @neuraltrust/opencode-trustguard to npm when a v* tag is pushed.
+#
+# Authenticated by the npm trusted publisher (OIDC) configured for this package
+# against this repository and workflow. No NPM_TOKEN is used, so there is
+# nothing to fall back to if the trust relationship breaks.
+# Modelled on NeuralTrust/trustguard-sdk .github/workflows/publish-node.yml.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing + provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - run: npm ci
+
+      # Trusted publishing requires npm >= 11.5.1; Node 22 bundles npm 10.x.
+      # Placed after `npm ci` so the install keeps using the bundled npm that
+      # already resolves this lockfile.
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@^11
+
+      - name: Check tag matches package.json version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          pkg_version="$(node -p "require('./package.json').version")"
+          if [ "$tag_version" != "$pkg_version" ]; then
+            echo "Tag version ($tag_version) does not match package.json version ($pkg_version)" >&2
+            exit 1
+          fi
+
+      # prepublishOnly runs typecheck and tests; prepack runs the build.
+      - run: npm publish --provenance --access public

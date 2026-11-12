@@ -6,7 +6,7 @@ const files = (map: Record<string, object>) => (p: string) => map[p] as any
 
 test("defaults match the other TrustGuard hooks", () => {
   const cfg = loadConfig({ env: { TRUSTGUARD_OPENCODE_CONFIG: "/u", TRUSTGUARD_OPENCODE_SYSTEM_CONFIG: "/s" }, readFile: () => undefined })
-  assert.equal(cfg.dataURL, "http://localhost:8081")
+  assert.equal(cfg.dataURL, "https://trustguard.neuraltrust.ai")
   assert.equal(cfg.apiKey, "")
   assert.equal(cfg.failMode, "open")
   assert.equal(cfg.transformAction, "ask")

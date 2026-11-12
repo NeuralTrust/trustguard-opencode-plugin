@@ -18,7 +18,7 @@ Works with **OpenCode V2** (`@opencode/plugin`, `id` + `setup`) and **OpenCode V
 
 ## Requirements
 
-- A TrustGuard **collector key** (`tgk_…`) and your workspace **base URL**. In the NeuralTrust console create a
+- A TrustGuard **collector key** (`tgk_…`). The SaaS base URL `https://trustguard.neuraltrust.ai` is the default. In the NeuralTrust console create a
   collector (Agent Security → Collectors), create its key on **Auth** and assign a policy. See
   [Collectors](https://docs.neuraltrust.ai/trustguard/concepts/collectors).
 - OpenCode V2, or OpenCode V1 1.18.29 or newer.
@@ -48,13 +48,13 @@ Set the same environment variables used by the other TrustGuard hooks:
 
 ```sh
 export TRUSTGUARD_API_KEY="tgk_…"                       # collector key (required)
-export TRUSTGUARD_DATA_URL="https://<your-trustguard-base-url>"
+export TRUSTGUARD_DATA_URL="https://trustguard.neuraltrust.ai"   # optional: this is the default (SaaS)
 ```
 
 | Env var | File key | Default | Meaning |
 | --- | --- | --- | --- |
 | `TRUSTGUARD_API_KEY` | `api_key` | — | Collector key. **Without it the plugin allows everything** and logs a warning. |
-| `TRUSTGUARD_DATA_URL` | `data_url` | `http://localhost:8081` | TrustGuard base URL (serves `/v1/evaluate`). |
+| `TRUSTGUARD_DATA_URL` | `data_url` | `https://trustguard.neuraltrust.ai` | TrustGuard base URL (serves `/v1/evaluate`). Change it only for another region or a self-hosted data plane (see the collector's **Connection** tab). |
 | `TRUSTGUARD_FAIL_MODE` | `fail_mode` | `open` | When TrustGuard is unreachable, times out or returns non-200: `open` allows, `closed` denies. |
 | `TRUSTGUARD_TRANSFORM_ACTION` | `transform_action` | `ask` | How a `transform` verdict on a tool call is applied: `ask`, `deny` or `allow`. |
 | `TRUSTGUARD_TIMEOUT_MS` | `timeout_ms` | `5000` | Timeout for each evaluate call. |
@@ -74,7 +74,7 @@ Values resolve as **env > plugin options > user file > managed file > default**:
 
 ```json
 {
-  "data_url": "https://<your-trustguard-base-url>",
+  "data_url": "https://trustguard.neuraltrust.ai",
   "api_key": "tgk_…",
   "fail_mode": "closed"
 }
@@ -110,6 +110,14 @@ npm pack --dry-run
 Load a local build in OpenCode V2 by pointing `plugins` at the package directory
 (`"plugins": ["/path/to/trustguard-opencode-plugin"]`); in V1 re-export it from
 `.opencode/plugin/trustguard.js`: `export { default } from "@neuraltrust/opencode-trustguard"`.
+
+## Release
+
+CI (`.github/workflows/ci.yml`) typechecks, builds and tests every pull request and push to `main` on Node 20
+and 22. Pushing a tag `vX.Y.Z` that matches `package.json` runs `.github/workflows/release.yml`, which publishes to npm
+with `npm publish --provenance --access public` through npm trusted publishing (OIDC, `id-token: write`); no npm
+token is stored. Configure the trusted publisher on npmjs.com (repository `NeuralTrust/trustguard-opencode-plugin`,
+workflow `release.yml`, environment `npm`) before the first tag.
 
 ## License
 

@@ -7,8 +7,8 @@ nessuna PR aperta.
 ## 1. API TrustGuard (da riusare, uguale agli hook Claude Code e Cursor)
 
 - Endpoint: `POST {TRUSTGUARD_DATA_URL}/v1/evaluate` (doc: https://docs.neuraltrust.ai/trustguard/api/evaluate).
-  SaaS: base URL della regione mostrata nella console (es. `https://trustguard.neuraltrust.ai`); default degli hook
-  `http://localhost:8081`.
+  SaaS: `https://trustguard.neuraltrust.ai`, default del plugin (verificato con una chiave reale il 12/11/2026;
+  gli hook Go usano ancora `http://localhost:8081`). Per altre regioni o self-hosted: tab **Connection** del collector.
 - Auth: `Authorization: Bearer <tgk_…>` (chiave del collector, lega il collector lato server).
 - Body: `{ payload, direction: input|output, protocol: llm|mcp|all, session_id?, consumer_id?, attributes }`.
   - Prompt utente → `protocol: llm`, `payload.messages=[{role:"user",content}]`.

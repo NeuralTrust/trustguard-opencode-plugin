@@ -47,7 +47,7 @@ export interface FileConfig {
 }
 
 export const DEFAULTS = {
-  dataURL: "http://localhost:8081",
+  dataURL: "https://trustguard.neuraltrust.ai",
   failMode: "open",
   transformAction: "ask",
   timeoutMs: 5000,

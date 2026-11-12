@@ -1,5 +1,5 @@
 {
-  "data_url": "https://<your-trustguard-base-url>",
+  "data_url": "https://trustguard.neuraltrust.ai",
   "api_key": "tgk_…",
   "fail_mode": "closed",
   "timeout_ms": 5000
