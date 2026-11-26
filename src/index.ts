@@ -193,7 +193,7 @@ export function createV2Setup(factory: FactoryOptions = {}): V2Setup {
   }
 }
 
-// Each text part stays its own block: TrustGuard bills per block, so a pre-joined text would not dedup.
+// Each text part is sent as its own block, as TrustGate sees an MCP result.
 function resultTexts(content: unknown): string[] | undefined {
   if (typeof content === "string") return [content]
   if (!Array.isArray(content)) return undefined
