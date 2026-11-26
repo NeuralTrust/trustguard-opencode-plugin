@@ -1,6 +1,6 @@
 {
   "name": "@neuraltrust/opencode-trustguard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NeuralTrust TrustGuard plugin for OpenCode: evaluates prompts, tool calls and tool results with POST /v1/evaluate and blocks risky actions before they run.",
   "type": "module",
   "license": "Apache-2.0",
