@@ -134,6 +134,22 @@ test("V2 execute.after replaces the result content on block", async () => {
   await hooks["tool.execute.after"](failed)
 })
 
+test("V2 execute.after sends each text part as its own block", async () => {
+  const { hooks, calls } = await v2(() => ({ json: { status: "allow" } }))
+  const content = [{ type: "text", text: "first" }, { type: "image", data: "x" }, { type: "text", text: "second" }]
+  await hooks["tool.execute.after"]({ ...before, tool: "search", status: "completed", result: { content, metadata: {} } })
+  assert.deepEqual(calls[0].body.payload.result.content, [
+    { type: "text", text: "first" },
+    { type: "text", text: "second" },
+  ])
+})
+
+test("V1 tool.execute.after keeps the single output string as one block", async () => {
+  const { hooks, calls } = await v1(() => ({ json: { status: "allow" } }))
+  await hooks["tool.execute.after"]({ tool: "read", sessionID: "s", callID: "c", args: {} }, { title: "t", output: "line1\nline2", metadata: {} })
+  assert.deepEqual(calls[0].body.payload.result.content, [{ type: "text", text: "line1\nline2" }])
+})
+
 test("V2 prompt hook throws on block so the prompt is not admitted", async () => {
   const { hooks } = await v2(() => ({ json: blockResponse("jailbreak", "prompt_guard") }))
   await assert.rejects(hooks["session.prompt"]({ sessionID: "ses", messageID: "m", prompt: { text: "DAN mode" } }), /jailbreak/)

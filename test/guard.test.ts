@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { Guard, applyVerdict, primaryReason } from "../src/guard.ts"
+import { Guard, applyVerdict, clip, clipBlocks, primaryReason } from "../src/guard.ts"
 import { evaluate } from "../src/client.ts"
 import { loadConfig } from "../src/config.ts"
 import { ENV, blockResponse, mockFetch, silent } from "./helpers.ts"
@@ -113,6 +113,44 @@ test("tool results: block withholds, transform masks, report keeps", async () =>
   const empty = mockFetch(() => ({ json: blockResponse() }))
   await new Guard({ config: cfg(), fetch: empty.fetch, log: silent }).checkToolResult({ tool: "read", args: {}, output: "  " })
   assert.equal(empty.calls.length, 0)
+})
+
+test("tool results: each part is its own content block", async () => {
+  const cases: Array<{ name: string; output: string | string[]; want: string[] }> = [
+    { name: "single string stays one block", output: "one", want: ["one"] },
+    { name: "multi part", output: ["a", "b"], want: ["a", "b"] },
+    { name: "blank parts dropped", output: ["a", "  ", "", "b"], want: ["a", "b"] },
+  ]
+  for (const c of cases) {
+    const m = mockFetch(() => ({ json: { status: "allow" } }))
+    await new Guard({ config: cfg(), fetch: m.fetch, log: silent }).checkToolResult({ tool: "read", args: {}, output: c.output })
+    assert.deepEqual(m.calls[0].body.payload.result.content, c.want.map((text) => ({ type: "text", text })), c.name)
+  }
+  const none = mockFetch(() => ({ json: blockResponse() }))
+  await new Guard({ config: cfg(), fetch: none.fetch, log: silent }).checkToolResult({ tool: "read", args: {}, output: [] })
+  assert.equal(none.calls.length, 0)
+})
+
+test("tool results: one byte budget across blocks, cut on a UTF-8 boundary", async () => {
+  const m = mockFetch(() => ({ json: { status: "allow" } }))
+  const config = { ...cfg(), maxContentBytes: 6 }
+  await new Guard({ config, fetch: m.fetch, log: silent }).checkToolResult({ tool: "read", args: {}, output: ["abcd", "éééé", "zzz"] })
+  assert.deepEqual(
+    m.calls[0].body.payload.result.content.map((c: any) => c.text),
+    ["abcd", "é"],
+  )
+})
+
+test("clip and clipBlocks never split a character", () => {
+  for (let n = 0; n <= 8; n++) {
+    const out = clip("héllo wörld", n)
+    assert.doesNotMatch(out, /\uFFFD/)
+    assert.ok(Buffer.byteLength(out, "utf8") <= n)
+  }
+  assert.equal(clip("short", 10), "short")
+  assert.deepEqual(clipBlocks(["abc", "def", "ghi"], 5), ["abc", "de"])
+  assert.deepEqual(clipBlocks(["abc", "  d"], 5), ["abc"])
+  assert.deepEqual(clipBlocks([], 5), [])
 })
 
 test("events can be disabled individually", async () => {
