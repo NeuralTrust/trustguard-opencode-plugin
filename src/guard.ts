@@ -30,7 +30,8 @@ export interface ToolCall {
 }
 
 export interface ToolResult extends ToolCall {
-  output: string
+  /** One string per result part; each is sent as its own content block. */
+  output: string | string[]
 }
 
 export type ResultDecision =
@@ -76,15 +77,15 @@ export class Guard {
 
   /** PostToolUse equivalent: tool output is model-bound context, scored as an MCP tool result (direction=output). */
   async checkToolResult(result: ToolResult): Promise<ResultDecision> {
-    const text = result.output ?? ""
-    if (text.trim() === "") return { action: "keep" }
+    const blocks = clipBlocks(toBlocks(result.output), this.config.maxContentBytes)
+    if (blocks.length === 0) return { action: "keep" }
     const req = this.base("tool.execute.after", result)
     req.direction = "output"
     req.protocol = "mcp"
     req.payload = {
       jsonrpc: "2.0",
       id: 1,
-      result: { content: [{ type: "text", text: clip(text, this.config.maxContentBytes) }] },
+      result: { content: blocks.map((text) => ({ type: "text", text })) },
     }
     ;(req.attributes as Record<string, unknown>).tool = { name: result.tool }
     const v = await this.run("tool.execute.after", req)
@@ -249,10 +250,32 @@ function maskedResultText(payload: Record<string, unknown> | null | undefined): 
   return texts.length ? texts.join("\n") : undefined
 }
 
-function clip(s: string, maxBytes: number): string {
+function toBlocks(output: string | string[] | undefined): string[] {
+  const parts = Array.isArray(output) ? output : [output ?? ""]
+  return parts.filter((p) => typeof p === "string" && p.trim() !== "")
+}
+
+// One byte budget across the blocks; blocks the budget never reaches are dropped.
+export function clipBlocks(blocks: string[], maxBytes: number): string[] {
+  const out: string[] = []
+  let left = maxBytes
+  for (const b of blocks) {
+    if (left <= 0) break
+    const c = clip(b, left)
+    if (c.trim() === "") continue
+    out.push(c)
+    left -= Buffer.byteLength(c, "utf8")
+  }
+  return out
+}
+
+// Cut on a UTF-8 boundary so no replacement character is produced.
+export function clip(s: string, maxBytes: number): string {
   const buf = Buffer.from(s, "utf8")
   if (buf.length <= maxBytes) return s
-  return buf.subarray(0, maxBytes).toString("utf8")
+  let end = Math.max(0, maxBytes)
+  while (end > 0 && (buf[end] & 0xc0) === 0x80) end--
+  return buf.subarray(0, end).toString("utf8")
 }
 
 function allow(): Verdict {

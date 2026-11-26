@@ -163,8 +163,8 @@ export function createV2Setup(factory: FactoryOptions = {}): V2Setup {
 
     await ctx.tool.hook("execute.after", async (event) => {
       if (event.status !== "completed") return
-      const text = resultText(event.result?.content)
-      if (text === undefined) return
+      const texts = resultTexts(event.result?.content)
+      if (texts === undefined) return
       const d = await guard.checkToolResult({
         tool: event.tool,
         args: event.input,
@@ -172,7 +172,7 @@ export function createV2Setup(factory: FactoryOptions = {}): V2Setup {
         callID: event.id,
         agent: event.agent,
         messageID: event.messageID,
-        output: text,
+        output: texts,
       })
       if (d.action === "replace") {
         event.result = {
@@ -193,11 +193,12 @@ export function createV2Setup(factory: FactoryOptions = {}): V2Setup {
   }
 }
 
-function resultText(content: unknown): string | undefined {
-  if (typeof content === "string") return content
+// Each text part stays its own block: TrustGuard bills per block, so a pre-joined text would not dedup.
+function resultTexts(content: unknown): string[] | undefined {
+  if (typeof content === "string") return [content]
   if (!Array.isArray(content)) return undefined
   const texts = content.filter((c: any) => c?.type === "text" && typeof c.text === "string").map((c: any) => c.text as string)
-  return texts.length ? texts.join("\n") : undefined
+  return texts.length ? texts : undefined
 }
 
 // ---------------------------------------------------------------- default export
